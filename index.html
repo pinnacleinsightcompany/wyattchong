@@ -14,27 +14,53 @@
   <title>Wyatt Chong | Executive & Trainer Profile</title>
 
 <style>
+  /* Interaction Overlay Styling */
   #audio-unlocker {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.05); /* Nearly transparent */
-    z-index: 99999; /* Sits on top of everything */
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.03);
+    z-index: 99999;
     cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: flex; justify-content: center; align-items: center;
   }
   .scroll-prompt {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 15px 25px;
-    border-radius: 30px;
-    font-family: sans-serif;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 25px; border-radius: 30px;
+    font-family: sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
   }
+
+  /* Floating UI Controls Panel */
+  #music-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 15px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-family: sans-serif;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+  #music-controls.hidden {
+    opacity: 0;
+    pointer-events: none; /* Can't click it while invisible */
+  }
+  #play-pause-btn {
+    background: #222; color: #fff;
+    border: none; padding: 6px 14px;
+    border-radius: 20px; cursor: pointer;
+    font-size: 14px;
+  }
+  #play-pause-btn:hover { background: #444; }
+  
+  .volume-container { display: flex; align-items: center; gap: 5px; font-size: 14px;}
+  #volume-slider { width: 80px; cursor: pointer; }
 </style>
+
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -62,39 +88,78 @@
 
 	<!-- 4. JavaScript for the Crescendo -->
 <script>
+const audio = document.getElementById("bg-music");
+const overlay = document.getElementById("audio-unlocker");
+const controls = document.getElementById("music-controls");
+const playPauseBtn = document.getElementById("play-pause-btn");
+const volumeSlider = document.getElementById("volume-slider");
+
+let targetVolume = 0.8; // Desired max volume
+
 function unlockAndFadeIn() {
-  const audio = document.getElementById("bg-music");
-  const overlay = document.getElementById("audio-unlocker");
-  
-  // 1. Remove the overlay block immediately so they can now scroll normally
+  // Hide overlay & reveal music widget smoothly
   overlay.style.display = "none";
+  controls.classList.remove("hidden");
   
-  // 2. Start audio at zero volume
   audio.volume = 0;
+  volumeSlider.value = targetVolume;
+  
   audio.play().then(() => {
-    // 3. Smooth Crescendo Fade-in (Over 3 seconds)
-    const targetVolume = 0.8; 
+    // Smooth Crescendo Loop (Over 3 seconds)
     const fadeDuration = 3000; 
     const intervalTime = 50; 
     const volumeStep = targetVolume / (fadeDuration / intervalTime);
     
     const fadeInterval = setInterval(() => {
+      // Only keep fading in if the user hasn't touched the pause button or slider manually
+      if (audio.paused) {
+        clearInterval(fadeInterval);
+        return;
+      }
+      
       if (audio.volume < targetVolume) {
         audio.volume = Math.min(audio.volume + volumeStep, targetVolume);
+        volumeSlider.value = audio.volume; // Sync slider with the fade-in progress
       } else {
         clearInterval(fadeInterval);
       }
     }, intervalTime);
-  }).catch(error => {
-    console.log("Playback blocked:", error);
   });
+}
+
+// User Action: Toggle Play / Pause
+function togglePlayPause() {
+  if (audio.paused) {
+    audio.play();
+    playPauseBtn.innerHTML = "⏸️ Pause";
+  } else {
+    audio.pause();
+    playPauseBtn.innerHTML = "▶️ Play";
+  }
+}
+
+// User Action: Manual Slider Adjustment
+function changeVolume(val) {
+  audio.volume = val;
+  targetVolume = val; // Overwrite target volume if they adjust it manually
 }
 </script>
 </head>
 <body>
-	<!-- 1. Transparent Full-Screen Click Layer -->
+	<!-- 1. The Interaction Overlay (Required to bypass browser blocking) -->
 <div id="audio-unlocker" onclick="unlockAndFadeIn()">
-  <div class="scroll-prompt">💡 Click anywhere or scroll to explore</div>
+  <div class="scroll-prompt">💡 Click anywhere to enter & play music</div>
+</div>
+
+<!-- 2. The Audio Tag -->
+<audio id="bg-music" src="music/song.mp3" preload="auto" loop></audio>
+
+<!-- 3. Floating Music Control Widget -->
+<div id="music-controls" class="hidden">
+  <button id="play-pause-btn" onclick="togglePlayPause()">⏸️ Pause</button>
+  <div class="volume-container">
+    🔊 <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)">
+  </div>
 </div>
   <header class="site-header" id="top">
     <div class="container nav-wrap">
