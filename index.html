@@ -13,6 +13,29 @@
   <meta property="og:image" content="assets/wyatt-profile.jpg" />
   <title>Wyatt Chong | Executive & Trainer Profile</title>
 
+<style>
+  #audio-unlocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.05); /* Nearly transparent */
+    z-index: 99999; /* Sits on top of everything */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .scroll-prompt {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    border-radius: 30px;
+    font-family: sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+</style>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet" />
@@ -36,8 +59,43 @@
     "description": "Business leader, entrepreneur and HRD Corp accredited trainer with more than three decades of cross-industry experience."
   }
   </script>
+
+	<!-- 4. JavaScript for the Crescendo -->
+<script>
+function unlockAndFadeIn() {
+  const audio = document.getElementById("bg-music");
+  const overlay = document.getElementById("audio-unlocker");
+  
+  // 1. Remove the overlay block immediately so they can now scroll normally
+  overlay.style.display = "none";
+  
+  // 2. Start audio at zero volume
+  audio.volume = 0;
+  audio.play().then(() => {
+    // 3. Smooth Crescendo Fade-in (Over 3 seconds)
+    const targetVolume = 0.8; 
+    const fadeDuration = 3000; 
+    const intervalTime = 50; 
+    const volumeStep = targetVolume / (fadeDuration / intervalTime);
+    
+    const fadeInterval = setInterval(() => {
+      if (audio.volume < targetVolume) {
+        audio.volume = Math.min(audio.volume + volumeStep, targetVolume);
+      } else {
+        clearInterval(fadeInterval);
+      }
+    }, intervalTime);
+  }).catch(error => {
+    console.log("Playback blocked:", error);
+  });
+}
+</script>
 </head>
 <body>
+	<!-- 1. Transparent Full-Screen Click Layer -->
+<div id="audio-unlocker" onclick="unlockAndFadeIn()">
+  <div class="scroll-prompt">💡 Click anywhere or scroll to explore</div>
+</div>
   <header class="site-header" id="top">
     <div class="container nav-wrap">
       <a class="brand" href="#top" aria-label="Wyatt Chong home">
@@ -56,10 +114,7 @@
 		  <a href="#philosophy">Philosophy</a>
         <a href="#contact" class="nav-cta">Connect</a>
       </nav>
-	<audio autoplay muted controls>
-	  <source src="assets/song.mp3" type="audio/mp3">
-	  Your browser does not support the audio element.
-	</audio>
+	<audio id="bg-music" src="assets/song.mp3" preload="auto" loop></audio>
     </div>
   </header>
 
