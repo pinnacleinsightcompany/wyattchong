@@ -13,102 +13,45 @@
   <meta property="og:image" content="assets/wyatt-profile.jpg" />
   <title>Wyatt Chong | Executive & Trainer Profile</title>
 
+<!-- Background music controls -->
 <style>
-  /* ==============================
-   BACKGROUND MUSIC CONTROLS
-============================== */
-
-#music-controls {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 9999;
-
-  display: flex;
-  align-items: center;
-  gap: 9px;
-
-  padding: 9px 13px;
-
-  background: rgba(15, 23, 42, 0.88);
-  color: #fff;
-
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 999px;
-
-  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-
-#music-controls:hover {
-  transform: translateY(-2px);
-}
-
-#play-pause-btn,
-#mute-btn {
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-#play-pause-btn:hover,
-#mute-btn:hover {
-  background: rgba(255,255,255,0.2);
-  transform: scale(1.06);
-}
-
-#volume-slider {
-  width: 85px;
-  accent-color: #d4af6a;
-  cursor: pointer;
-}
-
-#music-status {
-  font-family: "DM Sans", sans-serif;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0.8;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-
   #music-controls {
-    right: 12px;
-    bottom: 12px;
-    padding: 7px 10px;
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(15, 23, 42, 0.90);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.20);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
-
-  #volume-slider {
-    width: 65px;
+  #music-controls button {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    cursor: pointer;
   }
-
-  #music-status {
-    display: none;
+  #music-controls button:hover { background: rgba(255,255,255,0.20); }
+  #volume-slider { width: 90px; cursor: pointer; accent-color: #d4af6a; }
+  #music-status { font: 500 12px/1 'DM Sans', sans-serif; opacity: .82; white-space: nowrap; }
+  @media (max-width: 600px) {
+    #music-controls { right: 12px; bottom: 12px; padding: 8px 10px; }
+    #volume-slider { width: 65px; }
+    #music-status { display: none; }
   }
-}
 </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -135,8 +78,27 @@
   }
   </script>
 
+	
 </head>
 <body>
+  <!-- Background music: browser will autoplay when allowed; otherwise first user interaction unlocks sound -->
+  <audio id="bg-music" preload="auto" loop autoplay>
+    <source src="assets/song.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Floating music controls -->
+  <div id="music-controls" aria-label="Background music controls">
+    <button id="play-pause-btn" type="button" aria-label="Play background music" title="Play / Pause">
+      <i class="fa-solid fa-play"></i>
+    </button>
+    <button id="mute-btn" type="button" aria-label="Mute background music" title="Mute / Unmute">
+      <i class="fa-solid fa-volume-high"></i>
+    </button>
+    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.35" aria-label="Music volume">
+    <span id="music-status">Music</span>
+  </div>
+
   <header class="site-header" id="top">
     <div class="container nav-wrap">
       <a class="brand" href="#top" aria-label="Wyatt Chong home">
@@ -404,400 +366,6 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script src="script.js"></script>
+\n  <script>\n  document.addEventListener("DOMContentLoaded", () => {\n    const audio = document.getElementById("bg-music");\n    const playPauseBtn = document.getElementById("play-pause-btn");\n    const muteBtn = document.getElementById("mute-btn");\n    const volumeSlider = document.getElementById("volume-slider");\n    const musicStatus = document.getElementById("music-status");\n\n    if (!audio || !playPauseBtn || !muteBtn || !volumeSlider || !musicStatus) return;\n\n    const clamp = (n, min, max) => Math.min(Math.max(n, min), max);\n    const storedVolume = Number.parseFloat(localStorage.getItem("wyattMusicVolume"));\n    let preferredVolume = Number.isFinite(storedVolume) ? clamp(storedVolume, 0, 1) : 0.35;\n    const storedMuted = localStorage.getItem("wyattMusicMuted") === "true";\n    let userExplicitlyPaused = false;\n\n    audio.volume = preferredVolume;\n    audio.muted = storedMuted;\n    volumeSlider.value = preferredVolume;\n\n    function updateUI(message) {\n      const paused = audio.paused;\n      playPauseBtn.innerHTML = paused\n        ? '<i class="fa-solid fa-play"></i>'\n        : '<i class="fa-solid fa-pause"></i>';\n      playPauseBtn.setAttribute("aria-label", paused ? "Play background music" : "Pause background music");\n\n      if (audio.muted || audio.volume === 0) {\n        muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';\n      } else if (audio.volume < 0.5) {\n        muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';\n      } else {\n        muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';\n      }\n\n      musicStatus.textContent = message || (paused ? "Paused" : (audio.muted ? "Muted" : "Playing"));\n    }\n\n    function fadeTo(target, duration = 1200) {\n      target = clamp(target, 0, 1);\n      const start = audio.volume;\n      const startTime = performance.now();\n      const tick = (now) => {\n        if (audio.paused) return;\n        const progress = Math.min((now - startTime) / duration, 1);\n        audio.volume = start + (target - start) * progress;\n        volumeSlider.value = audio.volume.toFixed(2);\n        if (progress < 1) requestAnimationFrame(tick);\n      };\n      requestAnimationFrame(tick);\n    }\n\n    async function startAudiblePlayback() {\n      try {\n        audio.muted = false;\n        audio.volume = 0;\n        await audio.play();\n        fadeTo(preferredVolume);\n        localStorage.setItem("wyattMusicMuted", "false");\n        updateUI();\n        return true;\n      } catch (err) {\n        return false;\n      }\n    }\n\n    async function tryAutoplay() {\n      if (storedMuted) {\n        try {\n          audio.muted = true;\n          await audio.play();\n          updateUI("Muted");\n          return;\n        } catch (_) {}\n      }\n\n      const audibleStarted = await startAudiblePlayback();\n      if (audibleStarted) return;\n\n      // Standard browser fallback: muted autoplay, then unlock sound on first genuine interaction.\n      try {\n        audio.muted = true;\n        audio.volume = preferredVolume;\n        await audio.play();\n        updateUI("Tap to enable sound");\n      } catch (_) {\n        audio.pause();\n        updateUI("Tap to play");\n      }\n\n      const unlock = async (event) => {\n        // Do not steal the click from the music control itself.\n        if (event.target.closest && event.target.closest("#music-controls")) return;\n        if (userExplicitlyPaused) return;\n\n        const started = await startAudiblePlayback();\n        if (started) {\n          document.removeEventListener("pointerdown", unlock, true);\n          document.removeEventListener("keydown", unlock, true);\n        }\n      };\n\n      document.addEventListener("pointerdown", unlock, true);\n      document.addEventListener("keydown", unlock, true);\n    }\n\n    playPauseBtn.addEventListener("click", async (event) => {\n      event.stopPropagation();\n      if (audio.paused) {\n        userExplicitlyPaused = false;\n        try {\n          audio.muted = false;\n          audio.volume = preferredVolume;\n          await audio.play();\n          localStorage.setItem("wyattMusicMuted", "false");\n        } catch (err) {\n          console.warn("Audio could not start:", err);\n        }\n      } else {\n        userExplicitlyPaused = true;\n        audio.pause();\n      }\n      updateUI();\n    });\n\n    muteBtn.addEventListener("click", async (event) => {\n      event.stopPropagation();\n      if (audio.paused) {\n        try { await audio.play(); } catch (_) {}\n      }\n      audio.muted = !audio.muted;\n      localStorage.setItem("wyattMusicMuted", String(audio.muted));\n      updateUI();\n    });\n\n    volumeSlider.addEventListener("input", async (event) => {\n      event.stopPropagation();\n      preferredVolume = clamp(Number(event.target.value), 0, 1);\n      audio.volume = preferredVolume;\n      audio.muted = preferredVolume === 0;\n      localStorage.setItem("wyattMusicVolume", String(preferredVolume));\n      localStorage.setItem("wyattMusicMuted", String(audio.muted));\n      if (audio.paused && preferredVolume > 0) {\n        userExplicitlyPaused = false;\n        try { await audio.play(); } catch (_) {}\n      }\n      updateUI();\n    });\n\n    audio.addEventListener("play", () => updateUI());\n    audio.addEventListener("pause", () => updateUI());\n    audio.addEventListener("volumechange", () => updateUI());\n    audio.addEventListener("error", () => {\n      const code = audio.error?.code;\n      console.error("Background audio failed to load. MediaError code:", code, "Check assets/song.mp3 and its deployed path.");\n      updateUI("Audio unavailable");\n    });\n\n    updateUI();\n    tryAutoplay();\n  });\n  </script>\n
 </body>
-	<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  const audio = document.getElementById("bg-music");
-  const playPauseBtn = document.getElementById("play-pause-btn");
-  const muteBtn = document.getElementById("mute-btn");
-  const volumeSlider = document.getElementById("volume-slider");
-  const musicStatus = document.getElementById("music-status");
-
-  if (!audio) return;
-
-  /* ------------------------------
-     Initial settings
-  ------------------------------ */
-
-  const savedVolume = localStorage.getItem("wyattMusicVolume");
-  const savedMuted = localStorage.getItem("wyattMusicMuted");
-
-  let preferredVolume =
-    savedVolume !== null
-      ? parseFloat(savedVolume)
-      : 0.35;
-
-  audio.volume = preferredVolume;
-  volumeSlider.value = preferredVolume;
-
-  if (savedMuted === "true") {
-    audio.muted = true;
-  }
-
-  let interactionListenerActive = false;
-
-
-  /* ------------------------------
-     UI updates
-  ------------------------------ */
-
-  function updateControls() {
-
-    if (audio.paused) {
-      playPauseBtn.innerHTML =
-        '<i class="fa-solid fa-play"></i>';
-
-      playPauseBtn.setAttribute(
-        "aria-label",
-        "Play background music"
-      );
-
-      musicStatus.textContent = "Paused";
-
-    } else {
-
-      playPauseBtn.innerHTML =
-        '<i class="fa-solid fa-pause"></i>';
-
-      playPauseBtn.setAttribute(
-        "aria-label",
-        "Pause background music"
-      );
-
-      musicStatus.textContent = "Playing";
-    }
-
-
-    if (audio.muted || audio.volume === 0) {
-
-      muteBtn.innerHTML =
-        '<i class="fa-solid fa-volume-xmark"></i>';
-
-    } else if (audio.volume < 0.5) {
-
-      muteBtn.innerHTML =
-        '<i class="fa-solid fa-volume-low"></i>';
-
-    } else {
-
-      muteBtn.innerHTML =
-        '<i class="fa-solid fa-volume-high"></i>';
-    }
-  }
-
-
-  /* ------------------------------
-     Fade-in
-  ------------------------------ */
-
-  function fadeInMusic(targetVolume = preferredVolume) {
-
-    const fadeDuration = 1600;
-    const steps = 32;
-
-    const increment =
-      targetVolume / steps;
-
-    const interval =
-      fadeDuration / steps;
-
-    audio.volume = 0;
-
-    let currentStep = 0;
-
-    const fade = setInterval(() => {
-
-      if (audio.paused) {
-        clearInterval(fade);
-        return;
-      }
-
-      currentStep++;
-
-      audio.volume = Math.min(
-        targetVolume,
-        increment * currentStep
-      );
-
-      volumeSlider.value = audio.volume;
-
-      if (currentStep >= steps) {
-
-        clearInterval(fade);
-
-        audio.volume = targetVolume;
-        volumeSlider.value = targetVolume;
-      }
-
-    }, interval);
-  }
-
-
-  /* ------------------------------
-     Try automatic playback
-  ------------------------------ */
-
-  async function attemptAutoplay() {
-
-    try {
-
-      /*
-        First try normal autoplay.
-        Some browsers/settings may allow it.
-      */
-
-      audio.muted = false;
-      audio.volume = 0;
-
-      await audio.play();
-
-      fadeInMusic(preferredVolume);
-      updateControls();
-
-    } catch (error) {
-
-      /*
-        Browser blocked unmuted autoplay.
-
-        Start muted instead. Most browsers
-        permit muted autoplay.
-      */
-
-      try {
-
-        audio.muted = true;
-        audio.volume = preferredVolume;
-
-        await audio.play();
-
-        musicStatus.textContent =
-          "Tap to enable sound";
-
-        updateControls();
-
-        enableFirstInteractionUnlock();
-
-      } catch (mutedError) {
-
-        /*
-          Some browsers may block playback
-          entirely until interaction.
-        */
-
-        audio.pause();
-
-        musicStatus.textContent =
-          "Tap to play";
-
-        updateControls();
-
-        enableFirstInteractionUnlock();
-      }
-    }
-  }
-
-
-  /* ------------------------------
-     First click/touch unlock
-  ------------------------------ */
-
-  function enableFirstInteractionUnlock() {
-
-    if (interactionListenerActive)
-      return;
-
-    interactionListenerActive = true;
-
-    const unlock = async function () {
-
-      try {
-
-        audio.muted = false;
-
-        if (audio.paused) {
-
-          audio.volume = 0;
-
-          await audio.play();
-
-          fadeInMusic(preferredVolume);
-
-        } else {
-
-          /*
-            Music was already playing muted.
-            Fade audible volume in.
-          */
-
-          audio.volume = 0;
-
-          fadeInMusic(preferredVolume);
-        }
-
-        localStorage.setItem(
-          "wyattMusicMuted",
-          "false"
-        );
-
-        updateControls();
-
-      } catch (error) {
-
-        console.log(
-          "Audio playback requires user interaction.",
-          error
-        );
-
-      } finally {
-
-        document.removeEventListener(
-          "pointerdown",
-          unlock
-        );
-
-        document.removeEventListener(
-          "keydown",
-          unlock
-        );
-
-        interactionListenerActive = false;
-      }
-    };
-
-    document.addEventListener(
-      "pointerdown",
-      unlock,
-      { once: true }
-    );
-
-    document.addEventListener(
-      "keydown",
-      unlock,
-      { once: true }
-    );
-  }
-
-
-  /* ------------------------------
-     Play / Pause button
-  ------------------------------ */
-
-  playPauseBtn.addEventListener(
-    "click",
-    async function (event) {
-
-      event.stopPropagation();
-
-      if (audio.paused) {
-
-        try {
-
-          audio.muted = false;
-
-          await audio.play();
-
-          updateControls();
-
-        } catch (error) {
-
-          console.log(
-            "Unable to start audio:",
-            error
-          );
-        }
-
-      } else {
-
-        audio.pause();
-
-        updateControls();
-      }
-    }
-  );
-
-
-  /* ------------------------------
-     Mute button
-  ------------------------------ */
-
-  muteBtn.addEventListener(
-    "click",
-    function (event) {
-
-      event.stopPropagation();
-
-      audio.muted = !audio.muted;
-
-      localStorage.setItem(
-        "wyattMusicMuted",
-        audio.muted
-      );
-
-      updateControls();
-    }
-  );
-
-
-  /* ------------------------------
-     Volume slider
-  ------------------------------ */
-
-  volumeSlider.addEventListener(
-    "input",
-    function () {
-
-      const newVolume =
-        parseFloat(this.value);
-
-      audio.volume = newVolume;
-
-      preferredVolume = newVolume;
-
-      if (newVolume > 0) {
-
-        audio.muted = false;
-
-        localStorage.setItem(
-          "wyattMusicMuted",
-          "false"
-        );
-      }
-
-      localStorage.setItem(
-        "wyattMusicVolume",
-        newVolume
-      );
-
-      updateControls();
-    }
-  );
-
-
-  /* ------------------------------
-     Sync UI with audio
-  ------------------------------ */
-
-  audio.addEventListener(
-    "play",
-    updateControls
-  );
-
-  audio.addEventListener(
-    "pause",
-    updateControls
-  );
-
-  audio.addEventListener(
-    "volumechange",
-    updateControls
-  );
-
-
-  /* Start */
-  updateControls();
-  attemptAutoplay();
-
-});
-</script>
 </html>
