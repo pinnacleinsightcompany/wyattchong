@@ -145,7 +145,7 @@
           <p class="hero-lead">Started off in finance, pharmaceuticals and sales, then gain management and technical experience in heavy equipment, industrial equipment, telecommunications.</p>
           <p class="hero-lead">Went back to technology and scientific interests and cognitive science while helping with family business.</p>
 			<div class="hero-actions">
-            <a class="button primary" href="#journey">Explore the journey <i data-lucide="arrow-down-right"></i></a>
+            <a class="button primary" href="#about">Explore the journey <i data-lucide="arrow-down-right"></i></a>
             <a class="button ghost" href="#contact">Work with Wyatt</a>
           </div>
           <div class="hero-stats">
@@ -383,6 +383,57 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+  // ===============================
+  // Page libraries and UI
+  // ===============================
+  if (typeof AOS !== "undefined") {
+    AOS.init({
+      duration: 800,
+      easing: "ease-out",
+      once: true,
+      offset: 50
+    });
+  }
+
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
+
+  // Footer year
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // Mobile navigation
+  const navToggle = document.querySelector(".nav-toggle");
+  const navLinks = document.querySelector(".nav-links");
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = navToggle.getAttribute("aria-expanded") === "true";
+      navToggle.setAttribute("aria-expanded", String(!isOpen));
+      navLinks.classList.toggle("open", !isOpen);
+    });
+
+    navLinks.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        navToggle.setAttribute("aria-expanded", "false");
+        navLinks.classList.remove("open");
+      });
+    });
+  }
+
+  // Smooth in-page scrolling
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener("click", event => {
+      const id = link.getAttribute("href");
+      if (!id || id === "#") return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+
   const audio = document.getElementById("bg-music");
   const playPauseBtn = document.getElementById("play-pause-btn");
   const muteBtn = document.getElementById("mute-btn");
@@ -418,55 +469,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function tryAutoplay() {
+    // Browsers usually allow muted autoplay, but block autoplay with sound.
+    // Start muted if possible, then unmute on the first user interaction.
     try {
-      audio.muted = false;
+      audio.muted = true;
       audio.volume = preferredVolume;
-
       await audio.play();
-
+      musicStatus.textContent = "Tap to enable sound";
       updateUI();
-      console.log("Music autoplay started.");
-
+      enableInteractionUnlock();
     } catch (error) {
-      console.log("Audible autoplay blocked by browser.");
-
-      // Try muted autoplay instead
-      try {
-        audio.muted = true;
-        await audio.play();
-
-        musicStatus.textContent = "Click to enable sound";
-
-      } catch (error2) {
-        audio.pause();
-        musicStatus.textContent = "Click to play";
-      }
-
+      console.log("Autoplay blocked. Waiting for user interaction.", error);
+      audio.pause();
+      musicStatus.textContent = "Tap to play";
+      updateUI();
       enableInteractionUnlock();
     }
   }
 
   function enableInteractionUnlock() {
+    let unlocked = false;
 
     const unlockAudio = async () => {
+      if (unlocked) return;
+      unlocked = true;
+
       try {
         audio.muted = false;
         audio.volume = preferredVolume;
-
-        await audio.play();
-
+        if (audio.paused) await audio.play();
+        musicStatus.textContent = "Playing";
         updateUI();
-
-        document.removeEventListener("pointerdown", unlockAudio);
-        document.removeEventListener("keydown", unlockAudio);
-
       } catch (error) {
+        unlocked = false;
         console.error("Audio could not start:", error);
+        musicStatus.textContent = "Press Play";
       }
     };
 
-    document.addEventListener("pointerdown", unlockAudio);
-    document.addEventListener("keydown", unlockAudio);
+    document.addEventListener("pointerdown", unlockAudio, { once: true });
+    document.addEventListener("keydown", unlockAudio, { once: true });
   }
 
   playPauseBtn.addEventListener("click", async (event) => {
@@ -475,12 +517,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (audio.paused) {
       try {
         audio.muted = false;
+        audio.volume = preferredVolume;
         await audio.play();
+        musicStatus.textContent = "Playing";
       } catch (error) {
         console.error("Unable to play audio:", error);
+        musicStatus.textContent = "Audio unavailable";
       }
     } else {
       audio.pause();
+      musicStatus.textContent = "Paused";
     }
 
     updateUI();
@@ -527,7 +573,5 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-</body>
-</html>
 </body>
 </html>
